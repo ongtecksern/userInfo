@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IC Form</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Enter Details</h2>
+    <form id="userForm">
+        <label>New IC Number:</label>
+        <input type="text" id="icNumber" name="icNumber" oninput="setDOB()" required /><br>
+        
+        <br><br>
+
+        <label>Gender:</label>
+        <select id="gender" name="gender" required>
+            <option value="" disabled selected>Select Gender</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>            
+        </select><br>
+        
+        <br><br>
+
+        <label>Date of Birth:</label>
+        <input type="text" id="dateOfBirth" name="dateOfBirth" readonly /><br>
+        
+        <br><br>
+
+        <label>Postcode:</label>
+        <input type="text" id="postcode" name="postcode" oninput="updateTown()" required /><br>
+        
+        <br><br>
+
+        <label>Town:</label>
+        <input type="text" id="town" name="town" readonly /><br>
+        
+        <br><br>
+
+        <button type="button" onclick="saveData()">Save</button>
+    </form>
+
+    <p id="message" style="color:green;"></p>
+    <p id="error" style="color:red;"></p>
+
+    <script>
+        function setDOB() {
+            const icNumber = document.getElementById("icNumber").value;
+            
+            if (icNumber.length >= 6) {
+                const year = icNumber.substring(0, 2);
+                const month = icNumber.substring(2, 4);
+                const day = icNumber.substring(4, 6);
+                
+                const currentYear = new Date().getFullYear() % 100;
+                const fullYear = year > currentYear ? `19${year}` : `20${year}`;
+
+                document.getElementById("dateOfBirth").value = `${fullYear}-${month}-${day}`;
+                
+            }
+            if (icNumber.length >= 12){
+                const icLast = icNumber.charAt(icNumber.length - 1);                
+                const icLastDigit = parseInt(icLast);
+//                const total = icLastDigit % 2;
+                if (icLastDigit % 2 === 0){
+                    document.getElementById("gender").value = "F";                   
+                }else{
+                    document.getElementById("gender").value = "M"; 
+                }
+            }
+        }
+
+        function updateTown() {
+            const postcode = document.getElementById("postcode").value;
+            $.get(`/api/users/town?postcode=${postcode}`)
+                .done(function(data) {
+                    document.getElementById("town").value = data;
+                    document.getElementById("message").textContent = "Town found for the entered postcode.";
+                    document.getElementById("error").textContent = "";
+                })
+                .fail(function() {
+                    document.getElementById("town").value = "";
+                    document.getElementById("error").textContent = "Town not found for the entered postcode.";
+                    document.getElementById("message").textContent = "";
+                });
+        }
+
+        function saveData() {
+            const userData = {
+                icNumber: document.getElementById("icNumber").value,
+                gender: document.getElementById("gender").value,
+                dateOfBirth: document.getElementById("dateOfBirth").value,
+                postcode: document.getElementById("postcode").value,
+                town: document.getElementById("town").value
+            };
+
+            $.ajax({
+                url: '/api/users/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(userData),
+                success: function(response) {
+                    document.getElementById("message").textContent = response;
+                    document.getElementById("error").textContent = "";
+                },
+                error: function(xhr) {
+                    document.getElementById("error").textContent = xhr.responseText;
+                    document.getElementById("message").textContent = "";
+                }
+            });
+        }
+    </script>
+</body>
+</html>

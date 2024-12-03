@@ -1,0 +1,20 @@
+CREATE TABLE Town (
+    id SERIAL PRIMARY KEY,
+    postcode VARCHAR(10) UNIQUE NOT NULL,
+    town VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE UserInformation (
+    id SERIAL PRIMARY KEY,
+    ic_number VARCHAR(12) NOT NULL,
+    gender CHAR(1) CHECK (gender IN ('M', 'F')),
+    date_of_birth DATE NOT NULL,
+    postcode VARCHAR(10) NOT NULL,
+    town VARCHAR(100) NOT NULL,
+    FOREIGN KEY (postcode) REFERENCES Town(postcode)
+);
+
+-- Insert sample data into the Town table
+INSERT INTO Town (postcode, town) VALUES ('08000', 'Sungai Petani'), ('43200', 'Cheras');
+
+
